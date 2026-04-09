@@ -23,7 +23,9 @@ WORKDIR /var/www
 # We'll run composer install later via exec
 
 # Set permissions for storage and cache
-RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
 
 # Copy Nginx configuration (will be overridden by volume)
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
@@ -33,3 +35,5 @@ EXPOSE 80
 
 # Start PHP-FPM and Nginx
 CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
+
+

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\Contracts\SensorLogRepositoryInterface;
 use App\Repositories\Eloquent\SensorLogRepository;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
