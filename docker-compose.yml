@@ -14,27 +14,11 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - db
       - redis
     networks:
       - solar-net
 
-  db:
-    image: mysql:8.0
-    container_name: mysql_database
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: solar_db
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_PASSWORD: solarpanel
-      MYSQL_USER: solar_user
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - solar-net
-
+ 
   redis:
     image: redis:alpine
     container_name: redis_cache_solar
@@ -46,6 +30,3 @@ services:
 networks:
   solar-net:
     driver: bridge
-
-volumes:
-  db_data:
