@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Software Design Description &lpar;SDD&rpar;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="software-design-description-sdd">Software Design Description (SDD)</h1>
+<h2 id="for-autonomous-solar-tracking-station">for Autonomous Solar Tracking Station</h2>
+<h3 id="1-introduction">1. Introduction</h3>
+<h4 id="11-purpose">1.1 Purpose</h4>
+<p>This document presents the software design description for the Autonomous Solar Tracking Station project. It outlines the architectural, data, and interface designs for the web dashboard, mobile application, and integrated hardware components.</p>
+<h4 id="12-scope">1.2 Scope</h4>
+<p>The system provides real-time monitoring and remote control for a dual-axis solar tracking station. The scope includes:</p>
+<ul>
+<li><strong>Web Dashboard (Laravel):</strong> For historical data analysis and system management.</li>
+<li><strong>Mobile App (React Native):</strong> For on-site/remote manual control and event monitoring.</li>
+<li><strong>Hardware Integration (ESP32/Arduino):</strong> Telemetry acquisition and motor control.</li>
+<li><strong>Data Synchronization:</strong> Reliable polling and manual command execution.</li>
+</ul>
+<h3 id="2-references">2. References</h3>
+<ul>
+<li><strong>Laravel Framework:</strong> PHP-based backend for API and data management.</li>
+<li><strong>React Native / Expo:</strong> Javascript-based mobile application platform.</li>
+<li><strong>PostgreSQL / Supabase:</strong> Relational database for persistent storage.</li>
+<li><strong>Arduino/ESP32:</strong> Firmware for sensor integration and IoT connectivity.</li>
+</ul>
+<h3 id="3-system-architecture">3. System Architecture</h3>
+<h4 id="31-component-architecture">3.1 Component Architecture</h4>
+<pre><code class="language-mermaid">graph TD
+    User([User])
+    WebUI[Laravel Web Dashboard]
+    MobileUI[React Native Solar App]
+    API[Laravel REST API]
+    DB[(PostgreSQL Database)]
+    ESP32[ESP32 Gateway]
+    Arduino[Arduino Uno Controller]
+    Sensors[LDRs &amp; Ultrasonic]
+    Motors[Dual-Axis Servos]
+
+    User --&gt; WebUI
+    User --&gt; MobileUI
+    WebUI --&gt; API
+    MobileUI --&gt; API
+    API --&gt; DB
+    API &lt;--&gt; ESP32
+    ESP32 &lt;--&gt; Arduino
+    Arduino --&gt; Sensors
+    Arduino --&gt; Motors
+</code></pre>
+<h4 id="32-logical-design-models">3.2 Logical Design (Models)</h4>
+<pre><code class="language-mermaid">classDiagram
+    class SensorLog {
+        +int log_id
+        +datetime timestamp
+        +float ldr1..ldr6
+        +boolean shadow_detected
+        +boolean is_moving
+        +float servo_horizontal_angle
+        +float servo_vertical_angle
+        +float ultrasonic_distance
+        +string mode
+        +boolean emergency_stop_active
+    }
+    class PowerReading {
+        +int power_id
+        +datetime timestamp
+        +float battery_voltage
+        +float panel_voltage
+        +int log_id
+    }
+    class ManualCommand {
+        +int command_id
+        +string action
+        +string status
+        +datetime executed_at
+    }
+    class SystemConfig {
+        +int config_id
+        +float tracking_threshold
+        +int polling_interval
+    }
+    class UploadStatus {
+        +int upload_id
+        +datetime timestamp
+        +int files_uploaded
+        +int files_pending
+        +int storage_used_kb
+        +boolean upload_success
+    }
+
+    SensorLog &quot;1&quot; -- &quot;1&quot; PowerReading
+    SensorLog &quot;1&quot; -- &quot;0..*&quot; ManualCommand
+    SensorLog &quot;0..*&quot; -- &quot;1&quot; SystemConfig
+    UploadStatus &quot;0..*&quot; -- &quot;0..1&quot; SensorLog
+</code></pre>
+<h3 id="4-data-design">4. Data Design</h3>
+<h4 id="41-data-description">4.1 Data Description</h4>
+<p>The system utilizes several key tables to manage telemetry and configuration, precisely mapped to the Supabase schema.</p>
+<p><strong>Table: sensor_logs</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>log_id</td>
+<td>int8 (PK)</td>
+<td>Unique identifier for the log entry</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>timestamp</td>
+<td>Time of the measurement</td>
+</tr>
+<tr>
+<td>config_id</td>
+<td>int8 (FK)</td>
+<td>Reference to active system configuration</td>
+</tr>
+<tr>
+<td>ldr1..ldr6</td>
+<td>int2</td>
+<td>Light intensity readings (0-4095)</td>
+</tr>
+<tr>
+<td>shadow_detected</td>
+<td>bool</td>
+<td>Indicates if a shadow is cast on the panel</td>
+</tr>
+<tr>
+<td>is_moving</td>
+<td>bool</td>
+<td>Indicates motor status</td>
+</tr>
+<tr>
+<td>servo_horizontal_angle</td>
+<td>int2</td>
+<td>Current horizontal servo position</td>
+</tr>
+<tr>
+<td>servo_vertical_angle</td>
+<td>int2</td>
+<td>Current vertical servo position</td>
+</tr>
+<tr>
+<td>ultrasonic_distance</td>
+<td>float4</td>
+<td>Distance measured by ultrasonic sensor</td>
+</tr>
+<tr>
+<td>ultrasonic_servo_angle</td>
+<td>int2</td>
+<td>Angle of the ultrasonic mounting servo</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>varchar</td>
+<td>System mode ('AUTO', 'MANUAL', 'IDLE')</td>
+</tr>
+<tr>
+<td>emergency_stop_active</td>
+<td>bool</td>
+<td>Safety stop status</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: power_readings</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>power_id</td>
+<td>int8 (PK)</td>
+<td>Unique identifier</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>timestamp</td>
+<td>Time of measurement</td>
+</tr>
+<tr>
+<td>battery_voltage</td>
+<td>float4</td>
+<td>Battery charge level</td>
+</tr>
+<tr>
+<td>panel_voltage</td>
+<td>float4</td>
+<td>Panel generation voltage</td>
+</tr>
+<tr>
+<td>log_id</td>
+<td>int8 (FK)</td>
+<td>Reference to parent sensor log</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: manual_commands</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cmd_id</td>
+<td>int8 (PK)</td>
+<td>Unique command identifier</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>timestamp</td>
+<td>Time command was issued</td>
+</tr>
+<tr>
+<td>command</td>
+<td>varchar</td>
+<td>Action string (e.g., 'MOVE_LEFT')</td>
+</tr>
+<tr>
+<td>source</td>
+<td>varchar</td>
+<td>Origin (e.g., 'MOBILE', 'WEB')</td>
+</tr>
+<tr>
+<td>related_log_id</td>
+<td>int8 (FK)</td>
+<td>Context log during command</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: system_configs</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>config_id</td>
+<td>int8 (PK)</td>
+<td>Primary key</td>
+</tr>
+<tr>
+<td>shadow_threshold</td>
+<td>int4</td>
+<td>Lux level to detect shade</td>
+</tr>
+<tr>
+<td>servo_home_horizontal</td>
+<td>int2</td>
+<td>Default home angle for horizontal servo</td>
+</tr>
+<tr>
+<td>servo_home_vertical</td>
+<td>int2</td>
+<td>Default home angle for vertical servo</td>
+</tr>
+<tr>
+<td>upload_interval_sec</td>
+<td>int4</td>
+<td>Telemetry sync frequency</td>
+</tr>
+<tr>
+<td>motor_speed</td>
+<td>int2</td>
+<td>Speed setting for servos/motors</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: system_events</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event_id</td>
+<td>int8 (PK)</td>
+<td>Primary key</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>timestamp</td>
+<td>Time of event occurrence</td>
+</tr>
+<tr>
+<td>event_type</td>
+<td>varchar</td>
+<td>Category (ERROR, WARN, INFO)</td>
+</tr>
+<tr>
+<td>details</td>
+<td>text</td>
+<td>Detailed event description</td>
+</tr>
+<tr>
+<td>trigger_log_id</td>
+<td>int8 (FK)</td>
+<td>Reference to triggering log entry</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table: upload_statuses</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fieldname</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>upload_id</td>
+<td>int8 (PK)</td>
+<td>Primary key</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>timestamp</td>
+<td>Time of the upload attempt</td>
+</tr>
+<tr>
+<td>files_uploaded</td>
+<td>int4</td>
+<td>Count of files successfully synced</td>
+</tr>
+<tr>
+<td>files_pending</td>
+<td>int4</td>
+<td>Count of files remaining in queue</td>
+</tr>
+<tr>
+<td>storage_used_kb</td>
+<td>int4</td>
+<td>Current usage of local storage</td>
+</tr>
+<tr>
+<td>upload_success</td>
+<td>bool</td>
+<td>Indicates if the sync session succeeded</td>
+</tr>
+</tbody>
+</table>
+<h3 id="5-detailed-design">5. Detailed Design</h3>
+<h4 id="51-telemetry-polling-sequence">5.1 Telemetry Polling Sequence</h4>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant ESP32
+    participant API
+    participant DB
+    participant App
+
+    ESP32-&gt;&gt;API: POST /api/sensor-logs (Telemetry Data)
+    API-&gt;&gt;DB: Save log &amp; power readings
+    DB--&gt;&gt;API: Success
+    API--&gt;&gt;ESP32: Ack (201 Created)
+    
+    App-&gt;&gt;API: GET /api/sensor-logs/latest
+    API-&gt;&gt;DB: Query latest record
+    DB--&gt;&gt;API: Data
+    API--&gt;&gt;App: JSON Response (Update UI)
+</code></pre>
+<h4 id="52-manual-command-flow">5.2 Manual Command Flow</h4>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant App
+    participant API
+    participant DB
+    participant ESP32
+
+    User-&gt;&gt;App: Press &quot;Move Left&quot;
+    App-&gt;&gt;API: POST /api/manual-commands {action: 'MOVE_LEFT'}
+    API-&gt;&gt;DB: Store command (status: PENDING)
+    API--&gt;&gt;App: Command ID
+    
+    ESP32-&gt;&gt;API: GET /api/manual-commands/pending
+    API-&gt;&gt;DB: Fetch latest pending command
+    DB--&gt;&gt;API: Command Data
+    API--&gt;&gt;ESP32: Command {action: 'MOVE_LEFT'}
+    ESP32-&gt;&gt;ESP32: Execute Motor Control
+    ESP32-&gt;&gt;API: PATCH /api/manual-commands/{id} {status: 'EXECUTED'}
+</code></pre>
+<h3 id="6-human-interface-design">6. Human Interface Design</h3>
+<h4 id="61-web-dashboard-laravel">6.1 Web Dashboard (Laravel)</h4>
+<ul>
+<li><strong>Overview:</strong> Real-time gauges for Battery and Panel voltage.</li>
+<li><strong>Charts:</strong> Historical trends for light intensity and power efficiency.</li>
+<li><strong>System Events:</strong> Table showing recent errors or mode changes.</li>
+</ul>
+<h4 id="62-mobile-application-react-native">6.2 Mobile Application (React Native)</h4>
+<ul>
+<li><strong>Dashboard Screen:</strong> Summary of latest readings and system status.</li>
+<li><strong>Control Screen:</strong> Interactive joystick/buttons for manual servo adjustment.</li>
+<li><strong>Events Screen:</strong> Notification log for system alerts.</li>
+<li><strong>Settings Screen:</strong> Configuration for polling intervals and calibration offsets.</li>
+</ul>
+<h3 id="7-database-relationship-analysis">7. Database Relationship Analysis</h3>
+<h4 id="71-table-relationships-overview">7.1 Table Relationships Overview</h4>
+<p>The database schema follows a hub-and-spoke model centered around the <code>sensor_logs</code> table:</p>
+<ul>
+<li><strong>sensor_logs &amp; power_readings (1:1):</strong> Every sensor measurement is accompanied by a precise power reading. These are separated to keep telemetry (environment) and power metrics (hardware health) modular.</li>
+<li><strong>sensor_logs &amp; system_configs (N:1):</strong> Multiple log entries reference a single configuration ID. This allows the system to track which thresholds and home positions were active during any specific measurement.</li>
+<li><strong>sensor_logs &amp; manual_commands (1:N):</strong> Commands issued via the mobile app are linked to a &quot;related log&quot; to provide historical context on the station's state at the moment the command was executed.</li>
+<li><strong>sensor_logs &amp; system_events (1:N):</strong> Events (like errors or mode changes) are linked to the log entry that triggered them, enabling precise debugging of system failures.</li>
+</ul>
+<h4 id="72-independence-of-upload_statuses">7.2 Independence of upload_statuses</h4>
+<p>The <code>upload_statuses</code> table intentionally lacks direct foreign key relationships with the telemetry tables for the following reasons:</p>
+<ul>
+<li><strong>System Health Monitoring:</strong> This table serves as a &quot;meta-monitoring&quot; layer. It tracks the health of the synchronization process itself (e.g., SPIFFS usage on the ESP32, number of files in the queue) rather than the specific content of the data being moved.</li>
+<li><strong>Asynchronous Synchronization:</strong> Telemetry uploads may happen in batches (especially after offline periods). Linking a single upload status to thousands of sensor logs would create unnecessary overhead and database locking.</li>
+<li><strong>Modular Architecture:</strong> By keeping upload metrics independent, the system can monitor the efficiency of the &quot;data pipe&quot; without being tightly coupled to the structure of the &quot;data&quot; itself. This allows for easier updates to the telemetry schema without affecting the sync monitoring logic.</li>
+</ul>
+
+            
+            
+        </body>
+        </html>

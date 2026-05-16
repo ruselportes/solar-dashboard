@@ -15,5 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException $e) {
+            // Check if the error is a connection failure (e.g., offline)
+            if (str_contains($e->getMessage(), 'could not translate host name') || 
+                str_contains($e->getMessage(), 'Connection refused') ||
+                str_contains($e->getMessage(), 'SQLSTATE[08006]')) {
+                return response()->view('errors.offline', [], 503);
+            }
+        });
     })->create();

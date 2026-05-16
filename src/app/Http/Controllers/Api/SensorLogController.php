@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\SensorLogRepositoryInterface;
+use App\Models\SensorLog;
 
 class SensorLogController extends Controller
 {
@@ -15,13 +16,29 @@ class SensorLogController extends Controller
         $this->sensorLogRepo = $sensorLogRepo;
     }
 
+
     public function latest()
     {
-        return response()->json($this->sensorLogRepo->getLatest());
+        $latest = $this->sensorLogRepo->getLatest();
+        if ($latest) {
+            $latest->load('powerReading');
+        }
+        return response()->json($latest);
     }
 
     public function index()
     {
-        return response()->json($this->sensorLogRepo->getPaginated(20));
+        return response()->json($this->sensorLogRepo->getPaginated(['per_page' => 20]));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->all();
+        if (!isset($data['timestamp'])) {
+            $data['timestamp'] = now();
+        }
+        
+        $log = \App\Models\SensorLog::create($data);
+        return response()->json(['log_id' => $log->log_id], 201);
     }
 }
